@@ -1,4 +1,5 @@
 local p = premake
+OUTPUT_FOLDER = 'out'
 
 -- Premake extensions
 newaction {
@@ -29,10 +30,10 @@ newaction {
 
 	onProject = function(prj)
 	if prj.androidmanifest == nil then
-		p.generate(prj, prj.name .. "/src/main/AndroidManifest.xml",  p.modules.android_studio.generate_manifest)
+		p.generate(prj, OUTPUT_FOLDER .."/" .. prj.name .. "/src/main/AndroidManifest.xml",  p.modules.android_studio.generate_manifest)
 	end
-		p.generate(prj, prj.name .. "/build.gradle",  p.modules.android_studio.generate_project)
-		p.generate(prj, prj.name .. "/CMakeLists.txt",  p.modules.android_studio.generate_cmake_lists)
+		p.generate(prj, OUTPUT_FOLDER .. "/" .. prj.name .. "/build.gradle",  p.modules.android_studio.generate_project)
+		p.generate(prj, OUTPUT_FOLDER .. "/" .. prj.name .. "/CMakeLists.txt",  p.modules.android_studio.generate_cmake_lists)
 	end
 }
 
