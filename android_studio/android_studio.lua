@@ -3,7 +3,7 @@
 -- Module interface
 local m = {}
 
---local OUTPUT_FOLDER = 'out'
+-- OUTPUT_FOLDER defined in _preload.lua
 
 local p = premake
 local project = p.project
@@ -194,7 +194,9 @@ function m.generate_cmake_lists(prj)
 				local f = io.open(cmakef,"r")
 				if f ~= nil then 
 					io.close(f)
+					p.x('if (NOT TARGET %s)', prj.name)
 					p.x('include(%s)', cmakef)
+					p.x('endif()')
 					project_deps = (project_deps .. " " .. prj.name)
 				end
 			end 
