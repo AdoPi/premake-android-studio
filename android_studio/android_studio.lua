@@ -184,6 +184,9 @@ end
 function m.generate_cmake_lists(prj)
 	p.w('cmake_minimum_required (VERSION 2.6)')
 	
+  -- TODO(Adonis) add config option for this one
+  p.w('set(CMAKE_POSITION_INDEPENDENT_CODE ON)')
+
 	cmake_file_exts =
 	{
 		".cpp",
