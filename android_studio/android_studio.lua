@@ -172,6 +172,15 @@ function m.csv_string_from_table(tab)
 	return csv_list
 end
 	
+function eval_shell(s)
+  --FIXME(Adonis) what about Windows and FreeBSD?
+  local cmd = 'eval "echo \\"'.. s  ..'\\""';
+  local handle = io.popen(cmd) 
+  local r = handle:read("*a")
+  handle:close()
+  return r
+end
+
 function m.generate_cmake_lists(prj)
 	p.w('cmake_minimum_required (VERSION 2.6)')
 	
@@ -210,6 +219,9 @@ function m.generate_cmake_lists(prj)
 		-- somehow gradle wants lowecase debug / release but 
 		-- still passes "Debug" and "Release" to cmake
 		p.x('if(CMAKE_BUILD_TYPE STREQUAL "%s")', cfg.name)
+    
+    -- TODO(Adonis) eval strings as shell code to get `cmd` values
+
 		-- target				
 		local file_list = ""
 		for _, file in ipairs(cfg.files) do
@@ -220,6 +232,7 @@ function m.generate_cmake_lists(prj)
 			end
 		end
 		if file_list ~= "" then
+      file_list = eval_shell(file_list)
 			p.x('add_library(%s %s %s)', prj.name, cmake_kind, file_list)
 		end
 		
@@ -229,6 +242,7 @@ function m.generate_cmake_lists(prj)
 			include_dirs = (include_dirs .. " " .. dir)
 		end
 		if include_dirs ~= "" then
+      include_dirs = eval_shell(include_dirs)
 			p.x('target_include_directories(%s PUBLIC %s)', prj.name, include_dirs)
 		end
 		
@@ -247,6 +261,7 @@ function m.generate_cmake_lists(prj)
 		end
 
 		if cpp_flags ~= "" then
+      cpp_flags = eval_shell(cpp_flags)
 			p.x('target_compile_options(%s PUBLIC %s)', prj.name, cpp_flags)
 		end
 		
@@ -276,6 +291,7 @@ function m.generate_cmake_lists(prj)
 		end
 		
 		if ld_flags ~= "" then
+      ld_flags = eval_shell(ld_flags)
 			p.x('target_link_libraries(%s %s)', prj.name, ld_flags)
 		end
 		
@@ -285,6 +301,7 @@ function m.generate_cmake_lists(prj)
 			defines = (defines .. " " .. define)
 		end
 		if defines ~= "" then
+      defines = eval_shell(defines)
 			p.x('target_compile_definitions(%s PUBLIC %s)', prj.name, defines)
 		end
 		
