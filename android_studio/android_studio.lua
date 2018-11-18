@@ -180,7 +180,8 @@ function m.generate_cmake_lists(prj)
 		".cpp",
 		".c",
 		".h",
-		".hpp"	
+		".hpp",
+		".txt",
 	}
 	
 	local project_deps = ""
@@ -207,36 +208,62 @@ function m.generate_cmake_lists(prj)
 	
 	cmake_kind = get_cmake_program_kind(prj.kind)
 	for cfg in project.eachconfig(prj) do				
+		-- cpp flags
+		local cpp_flags = ""
+		for _, cppflag in ipairs(cfg.buildoptions) do
+				cpp_flags = (cpp_flags .. " " .. cppflag)
+		end
+
 		-- somehow gradle wants lowecase debug / release but 
 		-- still passes "Debug" and "Release" to cmake
-		p.x('if(CMAKE_BUILD_TYPE STREQUAL "%s")', cfg.name)
+--		p.x('if(CMAKE_BUILD_TYPE STREQUAL "%s")', cfg.name)
+--
 		-- target				
+		p.x('#Project files')
+		p.x('add_library(%s %s', prj.name, cmake_kind, file_list)
 		local file_list = ""
+		local cmake_list = {}
 		for _, file in ipairs(cfg.files) do
 			for _, ext in ipairs(cmake_file_exts) do
 				if path.getextension(file) == ext then
 					file_list = (file_list .. " " .. file)
+					-- file list can contain some CMakeLists paths
+					if (string.find(file,".txt")) then
+						if (string.find(file,"CMakeLists.txt")) then
+							table.insert(cmake_list,file)
+						else
+							p.x(file)
+						end
+					else
+						p.x(file)
+					end
 				end
 			end
 		end
-		if file_list ~= "" then
-			p.x('add_library(%s %s %s)', prj.name, cmake_kind, file_list)
+		p.x(')')
+
+		for _,c in ipairs(cmake_list) do
+			p.x('#External Dependencies')
+			p.x('include(%s)', c) -- add_subdirectory?
 		end
+
+--		if file_list ~= "" then
+--			p.x('add_library(%s %s %s)', prj.name, cmake_kind, file_list)
+--		end
 		
 		-- include dirs
 		local include_dirs = ""
+		p.x('#Include files')
+		p.x('target_include_directories(%s PUBLIC', prj.name)
 		for _, dir in ipairs(cfg.includedirs) do
 			include_dirs = (include_dirs .. " " .. dir)
+			p.x(dir)
 		end
-		if include_dirs ~= "" then
-			p.x('target_include_directories(%s PUBLIC %s)', prj.name, include_dirs)
-		end
+		p.x(')')
+		--		if include_dirs ~= "" then
+			--p.x('target_include_directories(%s PUBLIC %s)', prj.name, include_dirs)
+--		end
 		
-		-- cpp flags
-		local cpp_flags = ""
-		for _, cppflag in ipairs(cfg.buildoptions) do
-			cpp_flags = (cpp_flags .. " " .. cppflag)
-		end
 		
 		--optimises
 		local opt_map = { On = 3, Size = 's', Speed = 3, Full = 'fast', Debug = 1 }
@@ -288,7 +315,8 @@ function m.generate_cmake_lists(prj)
 			p.x('target_compile_definitions(%s PUBLIC %s)', prj.name, defines)
 		end
 		
-		p.w('endif()')
+--		p.w('endif()')
+		break
 		
 	end
 end
